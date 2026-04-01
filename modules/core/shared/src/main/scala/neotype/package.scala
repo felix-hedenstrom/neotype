@@ -135,6 +135,14 @@ abstract class Newtype[A] extends TypeWrapper[A]:
   final def makeOrThrow(input: A): Type =
     unsafeMake(validatedOrThrow(input))
 
+  /** Creates a new instance from any type in the wrapping chain.
+    *
+    * For example, if `Foo` wraps `NonEmptyString` which wraps `String`, then
+    * `Foo.makeUnderlying("hello")` will validate and wrap through each layer.
+    */
+  final def makeUnderlying[From](input: From)(using wt: WrappedType[From, Type]): Either[String, Type] =
+    wt.make(input)
+
   inline def unwrap(inline input: Type): A = input
 
   inline def unsafeMake(inline input: A): Type              = input
@@ -176,6 +184,14 @@ abstract class Subtype[A] extends TypeWrapper[A]:
   final def makeOrThrow(input: A): Type =
     unsafeMake(validatedOrThrow(input))
 
+  /** Creates a new instance from any type in the wrapping chain.
+    *
+    * For example, if `Foo` wraps `NonEmptyString` which wraps `String`, then
+    * `Foo.makeUnderlying("hello")` will validate and wrap through each layer.
+    */
+  final def makeUnderlying[From](input: From)(using wt: WrappedType[From, Type]): Either[String, Type] =
+    wt.make(input)
+
   inline def unsafeMake(inline input: A): Type              = input
   inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type] = input
 
@@ -192,7 +208,24 @@ trait WrappedType[Underlying, Wrapped]:
   inline def unsafeMakeF[F[_]](inline underlying: F[Underlying]): F[Wrapped] =
     underlying.asInstanceOf[F[Wrapped]]
 
-object WrappedType:
+private[neotype] trait WrappedTypeLowPriority:
+  /** Transitive case: if `A` can be wrapped into `Mid` and `Mid` can be
+    * wrapped into `B`, then `A` can be wrapped into `B`.
+    *
+    * This enables constructing deeply nested neotypes from their bottom-most
+    * underlying type. For example, if `Foo` wraps `NonEmptyString` which wraps
+    * `String`, then `WrappedType[String, Foo]` is automatically available.
+    */
+  given transitive[A, Mid, B](using
+      outer: WrappedType[Mid, B],
+      inner: WrappedType[A, Mid]
+  ): WrappedType[A, B] with
+    type Wrapper = Nothing
+    def unwrap(wrapped: B): A                  = inner.unwrap(outer.unwrap(wrapped))
+    def make(underlying: A): Either[String, B] = inner.make(underlying).flatMap(outer.make)
+    def makeOrThrow(underlying: A): B          = outer.makeOrThrow(inner.makeOrThrow(underlying))
+
+object WrappedType extends WrappedTypeLowPriority:
   inline def apply[A, B](using nt: WrappedType[A, B]): WrappedType[A, B] = nt
 
   given newtypeWrappedType[A, B](using nt: Newtype.WithType[A, B]): WrappedType[A, B] with

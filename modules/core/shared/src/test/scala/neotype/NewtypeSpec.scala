@@ -285,4 +285,48 @@ object NewtypeSpec extends ZIOSpecDefault:
         assertTrue(error.getMessage == "Must be the secret string!")
       }
     }
+
+    suiteAll("makeUnderlying") {
+      test("direct underlying type (same as make)") {
+        val result = Cents.makeUnderlying(100L)
+        assertTrue(result == Right(Cents(100L)))
+      }
+
+      test("transitive - Long to NonNegativeCents through Cents") {
+        val result = NonNegativeCents.makeUnderlying(100L)
+        assertTrue(result.isRight)
+      }
+
+      test("transitive - fails inner validation") {
+        val result = NonNegativeCents.makeUnderlying(-1L)
+        assertTrue(result == Left("Validation Failed"))
+      }
+
+      test("intermediate type still works") {
+        val cents = Cents(100L)
+        val result = NonNegativeCents.makeUnderlying(cents)
+        assertTrue(result.isRight)
+      }
+    }
+
+    suiteAll("transitive WrappedType") {
+      test("make through layers") {
+        val wt = summon[WrappedType[Long, NonNegativeCents]]
+        val result = wt.make(100L)
+        assertTrue(result.isRight)
+      }
+
+      test("unwrap through layers") {
+        val wt = summon[WrappedType[Long, NonNegativeCents]]
+        val cents = Cents(42L)
+        val nnc = NonNegativeCents.makeOrThrow(cents)
+        assertTrue(wt.unwrap(nnc) == 42L)
+      }
+
+      test("make fails when inner validation fails") {
+        val wt = summon[WrappedType[Long, NonNegativeCents]]
+        val result = wt.make(-1L)
+        assertTrue(result == Left("Validation Failed"))
+      }
+    }
   }
