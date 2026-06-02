@@ -17,6 +17,8 @@ given JsonCodec[OptionalHolder] = DeriveJsonCodec.gen[OptionalHolder]
 given JsonCodec[ListHolder]     = DeriveJsonCodec.gen[ListHolder]
 
 object ZioJsonSpec extends JsonLibrarySpec[JsonCodec]("ZioJson", ZioJsonLibrary):
+  override protected def compositeCodec: Option[JsonCodec[Composite]] = Some(summon[JsonCodec[Composite]])
+
   override protected def optionalHolderCodec: Option[JsonCodec[OptionalHolder]] =
     Some(summon[JsonCodec[OptionalHolder]])
   override protected def listHolderCodec: Option[JsonCodec[ListHolder]] =

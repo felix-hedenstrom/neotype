@@ -60,6 +60,8 @@ given JsonWriter[ListHolder] =
     .addField("items")(_.items)
 
 object TethysSpec extends JsonLibrarySpec[TethysCodecStub]("Tethys", TethysLibrary):
+  override protected def compositeCodec: Option[TethysCodecStub[Composite]] = Some(summon[TethysCodecStub[Composite]])
+
   override protected def optionalHolderCodec: Option[TethysCodecStub[OptionalHolder]] =
     Some(summon[TethysCodecStub[OptionalHolder]])
   override protected def listHolderCodec: Option[TethysCodecStub[ListHolder]] =

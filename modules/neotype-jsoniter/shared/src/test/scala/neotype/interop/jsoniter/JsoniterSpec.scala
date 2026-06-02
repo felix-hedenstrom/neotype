@@ -27,6 +27,9 @@ given JsonValueCodec[OptionalHolder] = JsonCodecMaker.make
 given JsonValueCodec[ListHolder]     = JsonCodecMaker.make
 
 object JsoniterSpec extends JsonLibrarySpec[JsonValueCodec]("Jsoniter", JsoniterLibrary):
+
+  override protected def compositeCodec: Option[JsonValueCodec[Composite]] = Some(summon[JsonValueCodec[Composite]])
+
   override protected def optionalHolderCodec: Option[JsonValueCodec[OptionalHolder]] =
     Some(summon[JsonValueCodec[OptionalHolder]])
   override protected def listHolderCodec: Option[JsonValueCodec[ListHolder]] =

@@ -57,6 +57,8 @@ given Encoder[ListHolder] = Encoder.instance { h =>
 }
 
 object CirceJsonSpec extends JsonLibrarySpec[CirceCodec]("Circe", CirceLibrary):
+  override protected def compositeCodec: Option[CirceCodec[Composite]] = Some(summon[CirceCodec[Composite]])
+
   override protected def optionalHolderCodec: Option[CirceCodec[OptionalHolder]] =
     Some(summon[CirceCodec[OptionalHolder]])
 

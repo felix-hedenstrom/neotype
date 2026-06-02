@@ -3,6 +3,7 @@ package neotype.interop.upickle
 import neotype.*
 import neotype.test.*
 import neotype.test.definitions.*
+import upickle.default
 import upickle.default.*
 import zio.test.*
 
@@ -22,6 +23,8 @@ given ReadWriter[OptionalHolder] = macroRW
 given ReadWriter[ListHolder]     = macroRW
 
 object UpickleSpec extends JsonLibrarySpec[ReadWriter]("Upickle", UpickleLibrary):
+  override protected def compositeCodec: Option[ReadWriter[Composite]] = Some(summon[ReadWriter[Composite]])
+
   override protected def optionalHolderCodec: Option[ReadWriter[OptionalHolder]] =
     Some(summon[ReadWriter[OptionalHolder]])
   override protected def listHolderCodec: Option[ReadWriter[ListHolder]] =

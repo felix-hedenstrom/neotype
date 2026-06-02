@@ -47,6 +47,8 @@ given Format[ListHolder] with
     (json \ "items").validate[List[ValidatedNewtype]].map(ListHolder.apply)
 
 object PlayJsonSpec extends JsonLibrarySpec[Format]("PlayJson", PlayJsonLibrary):
+  override protected def compositeCodec: Option[Format[Composite]] = Some(summon[Format[Composite]])
+
   override protected def optionalHolderCodec: Option[Format[OptionalHolder]] =
     Some(summon[Format[OptionalHolder]])
   override protected def listHolderCodec: Option[Format[ListHolder]] =
