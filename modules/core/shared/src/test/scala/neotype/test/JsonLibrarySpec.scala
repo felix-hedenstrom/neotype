@@ -41,12 +41,13 @@ trait JsonLibrarySpec[Codec[_]](
     name: String,
     val library: JsonLibrary[Codec]
 )(using
-    compositeCodec: Codec[Composite],
     validatedNewtypeCodec: Codec[ValidatedNewtype],
     validatedSubtypeCodec: Codec[ValidatedSubtype],
     simpleNewtypeCodec: Codec[SimpleNewtype],
     simpleSubtypeCodec: Codec[SimpleSubtype]
 ) extends ZIOSpecDefault:
+
+  protected def compositeCodec: Option[Codec[Composite]] = None
 
   /** Override to provide OptionalHolder codec for Option handling tests. If not
     * provided, Option tests will be skipped.
@@ -73,9 +74,8 @@ trait JsonLibrarySpec[Codec[_]](
         validatedNewtypeSuite,
         validatedSubtypeSuite,
         simpleNewtypeSuite,
-        simpleSubtypeSuite,
-        compositeSuite
-      ) ++ optionalSuite.toList ++ collectionSuite.toList ++ additionalSuites: _*
+        simpleSubtypeSuite
+      ) ++ compositeSuite.toList ++ optionalSuite.toList ++ collectionSuite.toList ++ additionalSuites: _*
     )
 
   private def validatedNewtypeSuite = suite("ValidatedNewtype")(
@@ -152,7 +152,7 @@ trait JsonLibrarySpec[Codec[_]](
     }
   )
 
-  private def compositeSuite = suite("Composite")(
+  private def compositeSuite = compositeCodec.map{ implicit compositeCodec => suite("Composite")(
     test("decode success") {
       val json =
         """ { "newtype": "hello", "simpleNewtype": 123, "subtype": "hello world", "simpleSubtype": 123 } """
@@ -190,6 +190,7 @@ trait JsonLibrarySpec[Codec[_]](
       )
     }
   )
+  }
 
   private def optionalSuite: Option[Spec[Any, Nothing]] =
     optionalHolderCodec.map { implicit codec =>
