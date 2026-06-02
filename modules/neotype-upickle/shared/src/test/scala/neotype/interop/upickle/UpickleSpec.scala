@@ -3,7 +3,6 @@ package neotype.interop.upickle
 import neotype.*
 import neotype.test.*
 import neotype.test.definitions.*
-import upickle.default
 import upickle.default.*
 import zio.test.*
 
